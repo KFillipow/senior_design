@@ -90,10 +90,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        private class ConnectThread extends Thread{
-            
-        }
+       // private class ConnectThread extends Thread{
         configureKKN();
+        }
+
 
 
         //read in data from bluetooth into two arrays
@@ -104,7 +104,8 @@ public class MainActivity extends AppCompatActivity {
         //listen for data
         //k nearest neighbor calculations
         //output result to app interface
-    }
+
+    //}
     private void list(){
         pairedDevices = BA.getBondedDevices();
 
