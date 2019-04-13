@@ -8,9 +8,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
+import android.os.Message;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -44,9 +46,16 @@ public class MainActivity extends AppCompatActivity {
    ImageView search_bt;
    ListView listView;
    TextView name_bt;
-
+   Handler blueoothIn;
+   private static final UUID BTMODULEUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // "random" unique identifier
    private BluetoothAdapter BA;
    private Set<BluetoothDevice> pairedDevices;
+   public static final int MESSAGE_READ = 0;
+    public static final int MESSAGE_WRITE = 1;
+    public static final int MESSAGE_TOAST = 2;
+
+        // ... (Add other message types here as needed.)
+
 
 
     @Override
@@ -61,6 +70,10 @@ public class MainActivity extends AppCompatActivity {
 
         name_bt.setText(getLocalBluetoothName());
         BA = BluetoothAdapter.getDefaultAdapter();
+
+        //add bluetoothIn = new Handler(){}
+        //once the button gets pressed, if statement goes through
+        //once data is collected, go to 2nd activity?
         if(BA == null){
             Toast.makeText(this,"Bluetooth not supported",Toast.LENGTH_SHORT).show();
             //finish();
@@ -91,6 +104,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
        // private class ConnectThread extends Thread{
+        ConnectThread mConnectThread = new ConnectThread(mDevice);
+        mConnectThread.start();
         configureKKN();
         }
 
@@ -106,6 +121,148 @@ public class MainActivity extends AppCompatActivity {
         //output result to app interface
 
     //}
+
+    private class ConnectThread extends Thread {
+        private final BluetoothSocket mmSocket;
+        private final BluetoothDevice mmDevice;
+
+        public ConnectThread(BluetoothDevice device) {
+            BluetoothSocket tmp = null;
+            mmDevice = device;
+
+            try {
+                // Get a BluetoothSocket to connect with the given BluetoothDevice.
+                // MY_UUID is the app's UUID string, also used in the server code.
+                tmp = device.createRfcommSocketToServiceRecord(BTMODULEUUID);
+            } catch (IOException e) {
+                //Log.e(TAG, "Socket's create() method failed", e);
+            }
+            mmSocket = tmp;
+        }
+
+        public void run() {
+            // Cancel discovery because it otherwise slows down the connection.
+            //BluetoothAdapter.cancelDiscovery();
+
+            try {
+                // Connect to the remote device through the socket. This call blocks
+                // until it succeeds or throws an exception.
+                mmSocket.connect();
+            } catch (IOException connectException) {
+                // Unable to connect; close the socket and return.
+                try {
+                    mmSocket.close();
+                } catch (IOException closeException) {
+                    //Log.e(TAG, "Could not close the client socket", closeException);
+                }
+                return;
+            }
+            // The connection attempt succeeded. Perform work associated with
+            // the connection in a separate thread.
+            //manageMyConnectedSocket(mmSocket);
+        }
+
+        // Closes the client socket and causes the thread to finish.
+        public void cancel() {
+            try {
+                mmSocket.close();
+            } catch (IOException e) {
+               // Log.e(TAG, "Could not close the client socket", e);
+            }
+        }
+    }
+
+    public class MyBluetoothService {
+        private static final String TAG = "MY_APP_DEBUG_TAG";
+        private Handler handler; // handler that gets info from Bluetooth service
+
+        // Defines several constants used when transmitting messages between the
+        // service and the UI.
+
+
+        private class ConnectedThread extends Thread {
+            private final BluetoothSocket mmSocket;
+            private final InputStream mmInStream;
+            private final OutputStream mmOutStream;
+            private byte[] mmBuffer; // mmBuffer store for the stream
+
+            public ConnectedThread(BluetoothSocket socket) {
+                mmSocket = socket;
+                InputStream tmpIn = null;
+                OutputStream tmpOut = null;
+
+                // Get the input and output streams; using temp objects because
+                // member streams are final.
+                try {
+                    tmpIn = socket.getInputStream();
+                } catch (IOException e) {
+                    Log.e(TAG, "Error occurred when creating input stream", e);
+                }
+                try {
+                    tmpOut = socket.getOutputStream();
+                } catch (IOException e) {
+                    Log.e(TAG, "Error occurred when creating output stream", e);
+                }
+
+                mmInStream = tmpIn;
+                mmOutStream = tmpOut;
+            }
+
+            public void run() {
+                mmBuffer = new byte[1024];
+                int numBytes; // bytes returned from read()
+
+                // Keep listening to the InputStream until an exception occurs.
+                while (true) {
+                    try {
+                        // Read from the InputStream.
+                        numBytes = mmInStream.read(mmBuffer);
+                        // Send the obtained bytes to the UI activity.
+                        Message readMsg = handler.obtainMessage(
+                                MESSAGE_READ, numBytes, -1,
+                                mmBuffer);
+                        readMsg.sendToTarget();
+                    } catch (IOException e) {
+                        Log.d(TAG, "Input stream was disconnected", e);
+                        break;
+                    }
+                }
+            }
+
+            // Call this from the main activity to send data to the remote device.
+            public void write(byte[] bytes) {
+                try {
+                    mmOutStream.write(bytes);
+
+                    // Share the sent message with the UI activity.
+                    Message writtenMsg = handler.obtainMessage(
+                            MESSAGE_WRITE, -1, -1, mmBuffer);
+                    writtenMsg.sendToTarget();
+                } catch (IOException e) {
+                    Log.e(TAG, "Error occurred when sending data", e);
+
+                    // Send a failure message back to the activity.
+                    Message writeErrorMsg =
+                            handler.obtainMessage(MESSAGE_TOAST);
+                    Bundle bundle = new Bundle();
+                    bundle.putString("toast",
+                            "Couldn't send data to the other device");
+                    writeErrorMsg.setData(bundle);
+                    handler.sendMessage(writeErrorMsg);
+                }
+            }
+
+            // Call this method from the main activity to shut down the connection.
+            public void cancel() {
+                try {
+                    mmSocket.close();
+                } catch (IOException e) {
+                    Log.e(TAG, "Could not close the connect socket", e);
+                }
+            }
+        }
+    }
+
     private void list(){
         pairedDevices = BA.getBondedDevices();
 
@@ -130,13 +287,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void configureKKN(){
+    public void configureKKN(){
         Button btn = (Button)findViewById(R.id.button2);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.i("My app","Magic Log mess");
                 startActivity(new Intent(MainActivity.this,Main2Activity.class));
-                //Log.i("My app","Magic Log mess");
+
             }
         });
     }
