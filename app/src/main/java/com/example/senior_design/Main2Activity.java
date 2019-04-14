@@ -2,6 +2,7 @@ package com.example.senior_design;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 
 public class Main2Activity extends AppCompatActivity {
 
@@ -48,11 +49,16 @@ public class Main2Activity extends AppCompatActivity {
                 0,39.62862,48.416863,98.595423,80.487563,100,53.677833,57.681555,36.442098,16.272498
                 ,39.986173,70.620236,63.725036,76.841983,52.067634,49.891993,100,79.86854,39.942669,
                 23.600166};
+        Bundle extras = getIntent().getExtras();
+        String [] x_values = extras.getStringArray("x_vals");
+        String [] y_values = extras.getStringArray("y_vals");
         int[] group_num = new int[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
                 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
                 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
                 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,
                 1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,
                 2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0};
+        Log.i("2nd ACt","Check arrays");
+
     }
 }
