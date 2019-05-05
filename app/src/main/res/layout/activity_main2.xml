@@ -10,7 +10,20 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Wait"
-        tools:layout_editor_absoluteX="191dp"
-        tools:layout_editor_absoluteY="332dp" />
+        android:layout_marginStart="164dp"
+        android:layout_marginTop="283dp"
+        android:text="The Chord is:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/chord_id"
+        android:layout_width="127dp"
+        android:layout_height="73dp"
+        android:layout_marginStart="142dp"
+        android:layout_marginTop="329dp"
+        android:text="TextView"
+        android:textSize="30sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </android.support.constraint.ConstraintLayout>

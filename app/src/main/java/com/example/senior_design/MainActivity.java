@@ -143,7 +143,11 @@ public class MainActivity extends AppCompatActivity {
                             //write to x values
                             //convert to int
                         }
-                        else if(counter == 24){
+                        else if(counter == 24)
+                        {
+                            Toast.makeText(getBaseContext(), "Data Aqcuired", Toast.LENGTH_SHORT).show();
+                        }
+                        else if(counter == 25){
                             Toast.makeText(getBaseContext(), "Data Aqcuired", Toast.LENGTH_SHORT).show();
                             counter = 0;
                         }
